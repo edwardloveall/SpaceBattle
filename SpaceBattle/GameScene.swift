@@ -6,28 +6,34 @@
 //  Copyright (c) 2016 Edward Loveall. All rights reserved.
 //
 
+import GameplayKit
 import SpriteKit
 
 class GameScene: SKScene {
-    override func didMoveToView(view: SKView) {
+  let agentSystem = GKComponentSystem(componentClass: GKAgent2D.self)
+  var lastUpdatedTime: CFTimeInterval = 0
+
+  var centerPoint: float2 {
+    let centerX = Float(CGRectGetMidX(frame))
+    let centerY = Float(CGRectGetMidY(frame))
+    return float2(x: centerX, y: centerY)
+  }
+
+  override func mouseDown(theEvent: NSEvent) {
+    let location = theEvent.locationInNode(self)
+    let node = AgentNode(startPoint: location)
+
+    addChild(node)
+    agentSystem.addComponent(node.agent)
+  }
+
+  override func update(currentTime: CFTimeInterval) {
+    if lastUpdatedTime == 0 {
+      lastUpdatedTime = currentTime
     }
 
-    override func mouseDown(theEvent: NSEvent) {
-      /* Called when a mouse click occurs */
-
-      let location = theEvent.locationInNode(self)
-
-      let sprite = SKSpriteNode(color: SKColor.blueColor(),
-                                size: CGSize(width: 20, height: 20))
-      sprite.position = location;
-
-      let action = SKAction.rotateByAngle(CGFloat(M_PI), duration:1)
-      sprite.runAction(SKAction.repeatActionForever(action))
-
-      self.addChild(sprite)
-    }
-
-    override func update(currentTime: CFTimeInterval) {
-      /* Called before each frame is rendered */
-    }
+    let delta = currentTime - lastUpdatedTime
+    lastUpdatedTime = currentTime
+    agentSystem.updateWithDeltaTime(delta)
+  }
 }
